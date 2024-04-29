@@ -8,9 +8,9 @@ async function signUpUser(req, res) {
         const hashpassword = bcrypt.hashSync(password, 10)
         const user = new userSchema({ email, username, password: hashpassword })
         await user.save()
-        return res.status(200).json({ user: user })
+        return res.status(200).json({ message: "Sign Up Successfull"})
     } catch (error) {
-        return res.status(400).json({ message: error?.message })
+        return res.status(200).json({message: "User Already Exists" })
     }
 }
 
