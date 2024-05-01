@@ -5,17 +5,26 @@ const userSchema = require("../models/signUpAndInSchema")
 async function createUserList(req, res) {
     try {
         const { title, body, email } = req.body
+        if (!title || !body || !email) {
+            return res.status(400).json({ succcess: false, message: "Missing Required Params" })
+        }
         const existingUser = await userSchema.findOne({ email })
         if (existingUser) {
             const list = new List({ title, body, user: existingUser })
-            await list.save().then(() => {
+            return await list.save().then(() => {
                 existingUser.list.push(list)
                 existingUser.save()
                 return res.status(200).json({ list })
             })
+                .catch(err => {
+                    return res.status(400).json(err.message)
+                })
+        }
+        else {
+            return res.status(404).json({ succcess: false, message: "User Not Found" })
         }
     } catch (error) {
-        console.log(error);
+        return res.status(400).json(error.message)
     }
 }
 
@@ -32,7 +41,7 @@ async function updateUserList(req, res) {
             })
         }
     } catch (error) {
-        res.status(500).json(error)
+        return res.status(500).json(error)
     }
 }
 
@@ -49,23 +58,21 @@ async function deleteUserList(req, res) {
                 })
         }
     } catch (error) {
-        res.status(500).json(error)
+        return res.status(500).json(error)
     }
 }
 
-// get 
-
 async function getUserListById(req, res) {
     try {
-        const list = await List.find({ user: req.params.id }).sort({ createdAt: -1 })
-        if (list.length !== 0) {
-            res.status(200).json({ list: list })
-        }else {
-            req.status(200).json({mesage: "No Tasks"})
+        const todo = await List.findById(req.params.id);
+        if (todo) {
+            res.status(200).json({ todo: todo });
+        } else {
+            res.status(404).json({ message: "No Data" });
         }
-
+        return res.status(200).json({ message: "Delete Successfully" })
     } catch (error) {
-        res.status(500).json(error)
+        return res.status(500).json({ message: "Add Correct Id" });
     }
 }
 
