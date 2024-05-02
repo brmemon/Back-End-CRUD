@@ -1,6 +1,7 @@
 const userSchema = require("../models/signUpAndInSchema")
 const List = require("../models/listSchema")
 const bcrypt = require("bcrypt")
+const nodemailer = require("nodemailer")
 
 // Sign Up
 async function signUpUser(req, res) {
@@ -36,7 +37,14 @@ async function signInUser(req, res) {
 // Forget
 async function forgetPassword(req, res) {
     try {
+        const forgetPassword = await userSchema.findOne({ email: req.body.email })
+        if (forgetPassword) {
+
+        } else {
+            res.status(200).json({ success: false, message: "Email Does Not Exists" })
+        }
     } catch (error) {
+        res.status(400).json({ success: false, message: error.message })
     }
 }
 
