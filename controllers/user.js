@@ -2,6 +2,7 @@ const userSchema = require("../models/signUpAndInSchema")
 const List = require("../models/listSchema")
 const bcrypt = require("bcrypt")
 const nodemailer = require("nodemailer")
+const authSchema = require("../models/signUpAndInSchema")
 
 // Sign Up
 async function signUpUser(req, res) {
@@ -37,16 +38,30 @@ async function signInUser(req, res) {
 // Forget
 async function forgetPassword(req, res) {
     try {
-        const forgetPassword = await userSchema.findOne({ email: req.body.email })
-        if (forgetPassword) {
-
+        const { email, oldPassword, newPassword } = req.body;
+        const user = await userSchema.findOne({ email: email });
+        if (user) {
+            const isPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
+            if (isPasswordCorrect) {
+                const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+                await userSchema.findByIdAndUpdate(user._id, { password: hashedNewPassword });
+                console.log(user._id, "user._id");
+                return res.status(200).json({ message: "Password Changed Successfully" });
+            } else {
+                return res.status(400).json({ message: "Incorrect Old Password" });
+            }
         } else {
-            res.status(200).json({ success: false, message: "Email Does Not Exists" })
+            return res.status(400).json({ message: "User Not Found" });
         }
     } catch (error) {
-        res.status(400).json({ success: false, message: error.message })
+        return res.status(400).json({ success: false, message: error.message });
     }
 }
+
+module.exports = {
+    forgetPassword
+};
+
 
 // get 
 async function getUserListsById(req, res) {
