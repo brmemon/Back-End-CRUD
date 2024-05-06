@@ -40,12 +40,14 @@ async function forgetPassword(req, res) {
     try {
         const { email, oldPassword, newPassword } = req.body;
         const user = await userSchema.findOne({ email: email });
+        if (email === "" || oldPassword === "" || newPassword === "") {
+            return res.status(200).json({ message: "All Fields Are Required" })
+        }
         if (user) {
             const isPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
             if (isPasswordCorrect) {
                 const hashedNewPassword = await bcrypt.hash(newPassword, 10);
                 await userSchema.findByIdAndUpdate(user._id, { password: hashedNewPassword });
-                console.log(user._id, "user._id");
                 return res.status(200).json({ message: "Password Changed Successfully" });
             } else {
                 return res.status(400).json({ message: "Incorrect Old Password" });
@@ -54,14 +56,9 @@ async function forgetPassword(req, res) {
             return res.status(400).json({ message: "User Not Found" });
         }
     } catch (error) {
-        return res.status(400).json({ success: false, message: error.message });
+        return res.status(500).json({ success: false, message: error.message });
     }
 }
-
-module.exports = {
-    forgetPassword
-};
-
 
 // get 
 async function getUserListsById(req, res) {

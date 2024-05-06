@@ -4,11 +4,11 @@ const userSchema = require("../models/signUpAndInSchema")
 // Create
 async function createUserList(req, res) {
     try {
-        const { title, body, email } = req.body
+        const { title, body, id } = req.body
         if (!title || !body || !email) {
             return res.status(400).json({ succcess: false, message: "Missing Required Params" })
         }
-        const existingUser = await userSchema.findOne({ email })
+        const existingUser = await userSchema.findById({ id })
         if (existingUser) {
             const list = new List({ title, body, user: existingUser })
             return await list.save().then(() => {
