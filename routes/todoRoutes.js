@@ -1,6 +1,6 @@
 const express = require("express")
 const router = express.Router()
-const { createUserList, updateUserList, deleteUserList, getUserListsById, getUserListById } = require("../controllers/list")
+const { createUserList, updateUserList, deleteUserList, getUserListById } = require("../controllers/list")
 
 router.post("/add", createUserList)
 router.put("/update/:id", updateUserList)

@@ -10,10 +10,11 @@ const listSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    user: [{
+
+    userId: {
         type: mongoose.Types.ObjectId,
         ref: "authSchema"
-    }],
+    },
 }, { timestamps: true })
 
 const todoListSchema = mongoose.model("todoListSchema", listSchema)
