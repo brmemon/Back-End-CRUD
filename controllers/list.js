@@ -32,30 +32,28 @@ async function createUserList(req, res) {
 
 async function updateUserList(req, res) {
     try {
-        const { title, body, email } = req.body
-        const existingUser = await userSchema.findOne({ email })
-        if (existingUser) {
-            const list = await List.findByIdAndUpdate(req.params.id, { title, body })
-            list.save().then(() => {
-                return res.status(200).json({ message: "Task Update" })
-            })
-        }
+      const { title, body } = req.body;
+      const list = await List.findByIdAndUpdate(req.params.id, { title, body });
+      if (!list) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      return res.status(200).json({ message: "Task Updated" });
     } catch (error) {
-        return res.status(500).json(error)
+      console.error("Error:", error.message);
+      return res.status(500).json({ error: "Internal server error" });
     }
-}
-
+  }
+  
 // Delete 
 
 async function deleteUserList(req, res) {
     try {
         const { id } = req.body
-        console.log(id);
         const existingUser = await userSchema.findByIdAndUpdate(id, { $pull: { list: req.params.id } })
         if (existingUser) {
-            await List.findByIdAndDelete(req.params.id)
+            return await List.findByIdAndDelete(req.params.id)
                 .then(() => {
-                    return res.status(200).json({ message: "Delete Successfully",id: req.params.id})
+                    return res.status(200).json({ message: "Delete Successfully", id: req.params.id })
                 })
         }
         return res.status(404).json({ message: "User Not Found" })
