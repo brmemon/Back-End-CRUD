@@ -11,7 +11,7 @@ async function signUpUser(req, res) {
         const hashpassword = bcrypt.hashSync(password, 10)
         const user = new userSchema({ email, username, password: hashpassword })
         await user.save()
-        return res.status(200).json({ message: "Sign Up Successfull" })
+        return res.status(200).json({ message: "Sign Up Successfull", user })
     } catch (error) {
         return res.status(200).json({ message: "User Already Exists" })
     }
@@ -36,7 +36,7 @@ async function signInUser(req, res) {
 }
 
 // Forget
-async function forgetPassword(req, res) {
+async function chnagePassword(req, res) {
     try {
         const { email, oldPassword, newPassword } = req.body;
         const user = await userSchema.findOne({ email: email });
@@ -79,6 +79,6 @@ async function getUserListsById(req, res) {
 module.exports = {
     signUpUser,
     signInUser,
-    forgetPassword,
+    chnagePassword,
     getUserListsById
 }

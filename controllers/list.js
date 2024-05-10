@@ -32,18 +32,20 @@ async function createUserList(req, res) {
 
 async function updateUserList(req, res) {
     try {
-      const { title, body } = req.body;
-      const list = await List.findByIdAndUpdate(req.params.id, { title, body });
-      if (!list) {
-        return res.status(404).json({ message: "Task not found" });
-      }
-      return res.status(200).json({ message: "Task Updated" });
+        const { title, body } = req.body;
+        const list = await List.findByIdAndUpdate(req.params.id, { title, body });
+        list.title = title;
+        list.body = body;
+        if (!list) {
+            return res.status(404).json({ message: "Task not found" });
+        }
+        return res.status(200).json({ message: "Task Updated", list });
     } catch (error) {
-      console.error("Error:", error.message);
-      return res.status(500).json({ error: "Internal server error" });
+        console.error("Error:", error.message);
+        return res.status(500).json({ error: "Internal server error" });
     }
-  }
-  
+}
+
 // Delete 
 
 async function deleteUserList(req, res) {
