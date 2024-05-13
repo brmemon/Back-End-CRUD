@@ -5,12 +5,12 @@ const list = require("./routes/todoRoutes")
 const cors = require("cors")
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.VERCEL_BACKEND_URL;
 app.use(express.json())
 
 // // //   Connection   // // //
 connectMongoDb("mongodb+srv://bmemon124:mongoDB@cluster0.rsbce1g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
-.then(() => console.log("MongoDB Connected!"))
+    .then(() => console.log("MongoDB Connected!"))
 
 app.use(cors());
 app.use("/api/user", auth)
