@@ -10,7 +10,7 @@ const app = express();
 app.use(express.json())
 
 // // //   Connection   // // //
-connectMongoDb("mongodb+srv://bmemon124:mongoDB@cluster0.rsbce1g.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+connectMongoDb(`${process.env.REACT_APP_MONGODB_CONNECT}`)
     .then(() => console.log("MongoDB Connected!"))
 
 app.use(cors());
