@@ -75,10 +75,19 @@ async function getUserListsById(req, res) {
     }
 }
 
+async function sendEmail(req, res) {
+    try {
+        res.status(200).json({ message: "OK" })
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+}
+
 
 module.exports = {
     signUpUser,
     signInUser,
     chnagePassword,
-    getUserListsById
+    getUserListsById,
+    sendEmail
 }
