@@ -5,7 +5,7 @@ const auth = require("./routes/auth")
 const list = require("./routes/todoRoutes")
 const cors = require("cors")
 
-const PORT = process.env.BACKEND_PORT;
+const PORT = process.env.REACT_APP_BACKEND_PORT;
 const app = express();
 app.use(express.json())
 
