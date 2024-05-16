@@ -1,47 +1,47 @@
-const userSchema = require("../models/signUpAndInSchema")
-const List = require("../models/listSchema")
-const bcrypt = require("bcrypt")
-const nodemailer = require("nodemailer")
-const Otp = require("../models/otp")
+const userSchema = require("../models/signUpAndInSchema");
+const List = require("../models/listSchema");
+const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
+const Otp = require("../models/otp");
 
 // Sign Up
 async function signUpUser(req, res) {
     try {
-        const { email, username, password } = req.body
-        const hashpassword = bcrypt.hashSync(password, 10)
-        const user = new userSchema({ email, username, password: hashpassword })
-        await user.save()
-        return res.status(200).json({ message: "Sign Up Successfull", user })
+        const { email, username, password } = req.body;
+        const hashpassword = bcrypt.hashSync(password, 10);
+        const user = new userSchema({ email, username, password: hashpassword });
+        await user.save();
+        return res.status(200).json({ message: "Sign Up Successful", user });
     } catch (error) {
-        return res.status(200).json({ message: "User Already Exists" })
+        return res.status(200).json({ message: "User Already Exists" });
     }
 }
 
 // Sign In
 async function signInUser(req, res) {
     try {
-        const user = await userSchema.findOne({ email: req.body.email })
+        const user = await userSchema.findOne({ email: req.body.email });
         if (!user) {
-            return res.status(200).json({ message: "Please Sign Up First" })
+            return res.status(200).json({ message: "Please Sign Up First" });
         }
-        const isPasswordCorrect = bcrypt.compareSync(req.body.password, user.password)
+        const isPasswordCorrect = bcrypt.compareSync(req.body.password, user.password);
         if (!isPasswordCorrect) {
-            return res.status(200).json({ message: "Password Is Not Correct" })
+            return res.status(200).json({ message: "Password Is Not Correct" });
         }
-        const { password, ...others } = user._doc
-        return res.status(200).json({ message: "Sign In Successfull", others })
+        const { password, ...others } = user._doc;
+        return res.status(200).json({ message: "Sign In Successful", others });
     } catch (error) {
-        return res.status(404).json({ message: "Eamil And Password Are Required" })
+        return res.status(404).json({ message: "Email And Password Are Required" });
     }
 }
 
-// Forget
-async function chnagePassword(req, res) {
+// Change Password
+async function changePassword(req, res) {
     try {
         const { email, oldPassword, newPassword } = req.body;
         const user = await userSchema.findOne({ email: email });
-        if (email === "" || oldPassword === "" || newPassword === "") {
-            return res.status(200).json({ message: "All Fields Are Required" })
+        if (!email || !oldPassword || !newPassword) {
+            return res.status(200).json({ message: "All Fields Are Required" });
         }
         if (user) {
             const isPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
@@ -60,102 +60,101 @@ async function chnagePassword(req, res) {
     }
 }
 
-// get 
+// Get User Lists by ID
 async function getUserListsById(req, res) {
     try {
-        const list = await List.find({ user: req.params.id }).sort({ createdAt: -1 })
+        const list = await List.find({ user: req.params.id }).sort({ createdAt: -1 });
         if (list.length !== 0) {
-            res.status(200).json({ list: list })
+            res.status(200).json({ list: list });
         } else {
-            req.status(200).json({ message: "Todo not found" })
+            res.status(200).json({ message: "Todo not found" });
         }
-
     } catch (error) {
-        res.status(500).json({ message: "No Data" })
+        res.status(500).json({ message: "No Data" });
     }
 }
 
-// send email
+// Send Email with OTP
 async function sendEmail(req, res) {
     try {
-        let data = await userSchema.findOne({ email: req.body.email })
+        const data = await userSchema.findOne({ email: req.body.email });
+        console.log(data);
         if (data) {
-            let otpCode = Math.floor((Math.random() * 10000) + 1);
-            let otpData = new Otp({
+            const otpCode = Math.floor((Math.random() * 10000) + 1);
+            console.log(otpCode, "otp");
+            const otpData = new Otp({
                 email: req.body.email,
                 code: otpCode,
                 expireIn: new Date().getTime() + 300 * 1000
-            })
-            await otpData.save()
-            return res.status(200).json({ message: 'Success Please Check Your Email' })
+            });
+            await otpData.save();
+
+            const transporter = nodemailer.createTransport({
+                service: "gmail",
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true,
+                auth: {
+                    user: process.env.MONGODB_EMAIL,
+                    pass: "kgnu nxhj dwok iwaq"
+                }
+            });
+            console.log("Username:", process.env.MONGODB_EMAIL);
+            console.log("Password:", process.env.MONGODB_PASSWORD);
+
+            const mailOptions = {
+                from: process.env.REACT_APP_MONGODB_EMAIL,
+                to: data?.email,
+                subject: "Password Reset OTP",
+                html: `<p>Your OTP for password reset is: <strong>${otpCode}</strong></p>`
+            };
+
+            const info = await transporter.sendMail(mailOptions);
+            console.log("Email sent: ", info.response);
+            return res.status(400).json({ success: true, message: "Success! Please check your email" });
         } else {
-            return res.status(200).json({ message: 'Email Not Exist' })
+            return res.status(400).json({ success: false, message: "Email does not exist" });
         }
-        // return res.status(404).json({ message: message })
     } catch (error) {
-        return res.status(500).json({ message: error.message })
+        console.error("Error sending email: ", error);
+        return res.status(500).json({ success: false, message: "Failed to send email" });
     }
 }
 
-// forgot password
+// Forgot Password
 async function forgotPassword(req, res) {
     try {
-        let data = await Otp.find({ email: req.body.email, code: req.body.otpCode })
-        if (data) {
-            let currentTime = new Date().getTime()
-            let difference = data.expireIn - currentTime
-            if (difference < 0) {
-                return res.status(200).json({ message: "Token Expire" })
-            } else {
-                let user = await userSchema.findOne({ email: req.body.email })
-                console.log("hellow world user: ", user);
-                if(!!user){
-                user.password = req.body.password
-                await user.save()
-                return res.status(200).json({ message: "Password Changed successfully" })
-            }
-            else return res.status(400).json({message: "User Not found"})
+        const { email, otp, password } = req.body;
+        const otpData = await Otp.findOne({ email: email, code: otp });
+        console.log(otp);
+        if (!otpData) {
+            return res.status(400).json({ message: "Invalid OTP" });
         }
-        } else {
-            return res.status(400).json({ message: "Invalid Otp" })
+
+        const currentTime = new Date().getTime();
+        if (otpData.expireIn < currentTime) {
+            return res.status(400).json({ message: "Token Expired" });
         }
+
+        const user = await userSchema.findOne({ email: email });
+        if (!user) {
+            return res.status(400).json({ message: "User Not Found" });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        user.password = hashedPassword;
+        await user.save();
+        return res.status(200).json({ message: "Password changed successfully" });
     } catch (error) {
-        res.status(500).json({ message: error.message })
+        return res.status(500).json({ message: error.message });
     }
-}
-
-
-const mailer = (email, otp) => {
-    const transporter = nodemailer.createTransport({
-        service: "gmail",
-        port: "587",
-        secure: "false",
-        auth: {
-            user: "OTP@gmail.com",
-            pass: "otp"
-        }
-    })
-    const mailOptions = {
-        from: 'OTP@gmail.com',
-        to: 'bmemon124@gmail.com',
-        subject: 'Send Email Using Node.js ',
-        text: "Thank You Sir !"
-    };
-
-    transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-            console.log(error);
-        } else {
-            console.log('Email Sent: ', info.response);
-        }
-    })
 }
 
 module.exports = {
     signUpUser,
     signInUser,
-    chnagePassword,
+    changePassword,
     getUserListsById,
     sendEmail,
     forgotPassword
-}
+};
