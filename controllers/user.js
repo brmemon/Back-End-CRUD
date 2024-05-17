@@ -78,10 +78,9 @@ async function getUserListsById(req, res) {
 async function sendEmail(req, res) {
     try {
         const data = await userSchema.findOne({ email: req.body.email });
-        console.log(data);
+        // console.log(data);
         if (data) {
             const otpCode = Math.floor((Math.random() * 10000) + 1);
-            console.log(otpCode, "otp");
             const otpData = new Otp({
                 email: req.body.email,
                 code: otpCode,
@@ -96,11 +95,9 @@ async function sendEmail(req, res) {
                 secure: true,
                 auth: {
                     user: process.env.MONGODB_EMAIL,
-                    pass: "kgnu nxhj dwok iwaq"
+                    pass: process.env.MONGODB_APP_PASSWORD
                 }
             });
-            console.log("Username:", process.env.MONGODB_EMAIL);
-            console.log("Password:", process.env.MONGODB_PASSWORD);
 
             const mailOptions = {
                 from: process.env.REACT_APP_MONGODB_EMAIL,
@@ -109,9 +106,8 @@ async function sendEmail(req, res) {
                 html: `<p>Your OTP for password reset is: <strong>${otpCode}</strong></p>`
             };
 
-            const info = await transporter.sendMail(mailOptions);
-            console.log("Email sent: ", info.response);
-            return res.status(400).json({ success: true, message: "Success! Please check your email" });
+            await transporter.sendMail(mailOptions);
+            return res.status(200).json({ success: true, message: "Success! Please check your email" });
         } else {
             return res.status(400).json({ success: false, message: "Email does not exist" });
         }
@@ -126,14 +122,15 @@ async function forgotPassword(req, res) {
     try {
         const { email, otp, password } = req.body;
         const otpData = await Otp.findOne({ email: email, code: otp });
-        console.log(otp);
+        console.log({ email: email, code: otp });
+        console.log(otpData, "otp data backend");
         if (!otpData) {
             return res.status(400).json({ message: "Invalid OTP" });
         }
 
         const currentTime = new Date().getTime();
         if (otpData.expireIn < currentTime) {
-            return res.status(400).json({ message: "Token Expired" });
+            return res.status(400).json({ message: "OTP Expired" });
         }
 
         const user = await userSchema.findOne({ email: email });
