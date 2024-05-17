@@ -7,31 +7,31 @@ const Otp = require("../models/otp");
 // Sign Up
 async function signUpUser(req, res) {
     try {
-        const { email, username, password } = req.body;
-        const hashpassword = bcrypt.hashSync(password, 10);
-        const user = new userSchema({ email, username, password: hashpassword });
-        await user.save();
-        return res.status(200).json({ message: "Sign Up Successful", user });
+        const { email, username, password } = req.body
+        const hashpassword = bcrypt.hashSync(password, 10)
+        const user = new userSchema({ email, username, password: hashpassword })
+        await user.save()
+        return res.status(200).json({ message: "Sign Up Successfull", user })
     } catch (error) {
-        return res.status(200).json({ message: "User Already Exists" });
+        return res.status(200).json({ message: "User Already Exists" })
     }
 }
 
 // Sign In
 async function signInUser(req, res) {
     try {
-        const user = await userSchema.findOne({ email: req.body.email });
+        const user = await userSchema.findOne({ email: req.body.email })
         if (!user) {
-            return res.status(200).json({ message: "Please Sign Up First" });
+            return res.status(200).json({ message: "Please Sign Up First" })
         }
-        const isPasswordCorrect = bcrypt.compareSync(req.body.password, user.password);
+        const isPasswordCorrect = bcrypt.compareSync(req.body.password, user.password)  
         if (!isPasswordCorrect) {
-            return res.status(200).json({ message: "Password Is Not Correct" });
+            return res.status(200).json({ message: "Password Is Not Correct" })
         }
-        const { password, ...others } = user._doc;
-        return res.status(200).json({ message: "Sign In Successful", others });
+        const { password, ...others } = user._doc
+        return res.status(200).json({ message: "Sign In Successfull", others })
     } catch (error) {
-        return res.status(404).json({ message: "Email And Password Are Required" });
+        return res.status(404).json({ message: "Eamil And Password Are Required" })
     }
 }
 
